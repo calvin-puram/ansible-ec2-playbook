@@ -17,6 +17,12 @@
     region: "{{ vpc_region }}"
   register: ec2_key
 
+- name: Create a key directory if it does not exist
+  file:
+    path: ./keys
+    state: directory
+    mode: "0755"
+
 - name: Save private key
   copy: content="{{ ec2_key.key.private_key }}" dest="./keys/{{ key_name }}.pem" mode=0600
   when: ec2_key.changed
