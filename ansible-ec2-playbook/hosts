@@ -3,6 +3,7 @@ localhost
 
 
 [webserver]
+54.82.220.3
 
 [webserver:vars]
 ansible_user= ubuntu
