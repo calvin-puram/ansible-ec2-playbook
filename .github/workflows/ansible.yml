@@ -25,6 +25,6 @@ jobs:
           playbook: playbook.yml
           directory: ansible-ec2-playbook
           options: |
-            --inventory inventory/inventory.yml
+            --inventory inventory/aws_ec2.yml
             --extra-vars @secrets/secrets.yml
             --verbose
