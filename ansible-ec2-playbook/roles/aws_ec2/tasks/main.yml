@@ -19,7 +19,7 @@
 
 - name: Create a key directory if it does not exist
   file:
-    path: /keys
+    path: ./keys
     state: directory
     mode: "0700"
 
