@@ -1,0 +1,30 @@
+name: Setup Infrastructure with Ansible
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  run_ansible_play:
+    name: Run Ansible Playbooks
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: dawidd6/action-ansible-playbook@v2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ANSIBLE_HOST_KEY_CHECKING: "false"
+          ANSIBLE_DEPRECATION_WARNINGS: "false"
+        with:
+          playbook: playbook.yml
+          directory: ansible-ec2-playbook
+          options: |
+            --inventory inventory/inventory.yml
+            --extra-vars @secrets/secrets.yml
+            --verbose

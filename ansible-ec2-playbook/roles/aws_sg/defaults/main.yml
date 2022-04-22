@@ -1,0 +1,6 @@
+# Use inside the tasks
+vpc_name: "{{ VPC_NAME }}"
+vpc_region: "{{ VPC_REGION }}"
+Environment: "{{ ENVIRONMENT }}"
+ec2_security_groups: "{{ EC2_SECURITY_GROUPS }}"
+state: "{{ SG_STATE }}"

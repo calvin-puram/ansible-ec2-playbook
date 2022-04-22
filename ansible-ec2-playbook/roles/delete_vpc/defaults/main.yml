@@ -1,0 +1,2 @@
+vpc_region: "{{ VPC_REGION }}"
+vpc_name: "{{ VPC_NAME }}"

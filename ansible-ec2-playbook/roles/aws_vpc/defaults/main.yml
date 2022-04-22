@@ -1,0 +1,6 @@
+---
+# Variables for VPC
+vpc_name: "{{ VPC_NAME }}"
+vpc_region: "{{ VPC_REGION }}"
+vpc_cidr_block: "{{ VPC_CIDR }}"
+state: "{{STATE}}"

@@ -1,0 +1,14 @@
+---
+- name: Basic configuration for all servers
+  hosts: all
+  gather_facts: no
+  connection: local
+  pre_tasks:
+    - name: Install boto3 and boto with pip3 module
+      pip:
+        name:
+          - boto3
+          - boto
+  roles:
+    - aws_vpc
+    - aws_sg

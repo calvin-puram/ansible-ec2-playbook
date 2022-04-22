@@ -1,0 +1,123 @@
+---
+- name: Creating an AWS VPC
+  ec2_vpc_net:
+    name: "{{vpc_name}}"
+    region: "{{ vpc_region }}"
+    cidr_block: "{{ vpc_cidr_block }}"
+    tenancy: default
+    state: "{{state}}"
+    tags:
+      Name: "{{ vpc_name }}-vpc"
+      Environment: "{{ ENVIRONMENT }}"
+  register: vpc
+
+- name: create Public Subnet 1 in Zone1
+  ec2_vpc_subnet:
+    vpc_id: "{{vpc.vpc.id}}"
+    region: "{{vpc_region}}"
+    az: "{{public_az_1}}"
+    state: "{{state}}"
+    cidr: "{{public_cidr_1}}"
+    map_public: yes
+    tags:
+      Name: "Public-SN1-for-{{ vpc_name }}-vpc"
+  register: pub_sub1
+
+- name: create Public subnet 2 in zone2
+  ec2_vpc_subnet:
+    vpc_id: "{{vpc.vpc.id}}"
+    region: "{{vpc_region}}"
+    az: "{{public_az_2}}"
+    state: "{{state}}"
+    cidr: "{{public_cidr_2}}"
+    map_public: yes
+    tags:
+      Name: "Public-SN2-for-{{ vpc_name }}-vpc"
+  register: pub_sub2
+
+- name: create Private Subnet 1 in Zone3
+  ec2_vpc_subnet:
+    vpc_id: "{{vpc.vpc.id}}"
+    region: "{{vpc_region}}"
+    az: "{{private_az_1}}"
+    state: "{{state}}"
+    cidr: "{{private_cidr_1}}"
+    tags:
+      Name: "Private-SN1-for-{{ vpc_name }}-vpc"
+  register: priv_sub1
+
+- name: create Private Subnet 2 in Zone4
+  ec2_vpc_subnet:
+    vpc_id: "{{vpc.vpc.id}}"
+    region: "{{vpc_region}}"
+    az: "{{private_az_2}}"
+    state: "{{state}}"
+    cidr: "{{private_cidr_2}}"
+    tags:
+      Name: "Private-SN2-for-{{ vpc_name }}-vpc"
+  register: priv_sub2
+
+- name: Internet Gateway Setup
+  ec2_vpc_igw:
+    vpc_id: "{{vpc.vpc.id}}"
+    region: "{{vpc_region}}"
+    state: "{{state}}"
+    tags:
+      Name: "{{ vpc_name }}-igw"
+  register: igw
+
+- name: Set up public subnet route table
+  ec2_vpc_route_table:
+    vpc_id: "{{vpc.vpc.id}}"
+    region: "{{vpc_region}}"
+    tags:
+      Name: "Public-RT-for-{{ vpc_name }}-vpc"
+    subnets:
+      - "{{pub_sub1.subnet.id}}"
+      - "{{pub_sub2.subnet.id}}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{igw.gateway_id}}"
+  register: pub_RT
+
+- name: Create new nat gateway and allocate new EIP if a nat gateway does not yet exist in the subnet.
+  ec2_vpc_nat_gateway:
+    state: "{{state}}"
+    subnet_id: "{{pub_sub1.subnet.id}}"
+    wait: yes
+    region: "{{vpc_region}}"
+    if_exist_do_not_create: true
+  register: nat_gw
+
+- name: Set up Private subnet route table
+  ec2_vpc_route_table:
+    vpc_id: "{{vpc.vpc.id}}"
+    region: "{{vpc_region}}"
+    tags:
+      Name: "Private-RT-for-{{ vpc_name }}-vpc"
+    subnets:
+      - "{{priv_sub1.subnet.id}}"
+      - "{{priv_sub2.subnet.id}}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{nat_gw.nat_gateway_id}}"
+  register: priv_RT
+
+- set_fact:
+    vpcid: "{{vpc.vpc.id}}"
+    pubsub1id: "{{pub_sub1.subnet.id}}"
+    pubsub2id: "{{pub_sub2.subnet.id}}"
+    privsub1id: "{{priv_sub1.subnet.id}}"
+    privsub2id: "{{priv_sub2.subnet.id}}"
+    igwid: "{{igw.gateway_id}}"
+    pubRTid: "{{pub_RT.route_table.id}}"
+    NATGWid: "{{nat_gw.nat_gateway_id}}"
+    privRTid: "{{priv_RT.route_table.id}}"
+    cacheable: yes
+
+- name: Create variables file for vpc output
+  copy:
+    content: "vpcid: {{vpc.vpc.id}}\npubsub1id: {{pub_sub1.subnet.id}}\npubsub2id: {{pub_sub2.subnet.id}}\nprivsub1id: {{priv_sub1.subnet.id}}\nprivsub2id: {{priv_sub2.subnet.id}}\nigwid: {{igw.gateway_id}}\npubRTid: {{pub_RT.route_table.id}}\nNATGWid: {{nat_gw.nat_gateway_id}}\nprivRTid: {{priv_RT.route_table.id}}\n"
+    dest: secrets/output_vars.yml
+
+- include_vars: "secrets/secrets.yml"

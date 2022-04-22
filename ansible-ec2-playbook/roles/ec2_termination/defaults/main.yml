@@ -1,0 +1,2 @@
+vpc_region: "{{ VPC_REGION }}"
+instance_tagName: "{{ INSTANCE_TAGNAME }}"

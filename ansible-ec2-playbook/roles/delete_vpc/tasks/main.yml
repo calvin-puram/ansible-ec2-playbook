@@ -1,0 +1,92 @@
+---
+- name: "Query for existing vpc by name ({{ vpc_name }})"
+  ec2_vpc_net_info:
+    region: "{{ vpc_region }}"
+    filters:
+      "tag:Name": "{{ vpc_name }}"
+  register: vpc_info
+
+- name: "Query for existing NAT gateway(s)"
+  ec2_vpc_nat_gateway_info:
+    region: "{{ vpc_region }}"
+    filters:
+      vpc-id: "{{ vpc_info.vpcs[0].vpc_id }}"
+  register: nat_gateways
+
+- name: "Delete nat gateway and release EIP"
+  ec2_vpc_nat_gateway:
+    region: "{{ vpc_region }}"
+    nat_gateway_id: "{{ item.nat_gateway_id }}"
+    release_eip: "{{ aws_vpc_delete.release_elastic_ip | default('yes') }}"
+    state: "absent"
+    wait: yes
+    wait_timeout: 300
+  with_items: "{{ nat_gateways.result }}"
+
+- name: "Delete internet gateway"
+  ec2_vpc_igw:
+    region: "{{ vpc_region }}"
+    vpc_id: "{{ vpcid }}" # Came from ouput specific secret file
+    state: "absent"
+  with_items: "{{ vpc_info.vpcs }}"
+
+- name: "Query for existing route table(s)"
+  ec2_vpc_route_table_info:
+    region: "{{ vpc_region }}"
+    filters:
+      vpc-id: "{{ vpc_info.vpcs[0].vpc_id }}"
+      association.main: "false"
+  register: route_table_info
+
+- set_fact:
+    route_tables_to_delete: "{{ (route_tables_to_delete | default([])) + [item.id] }}"
+  when: item.associations | length == 0 or not item.associations[0].main
+  loop: "{{ route_table_info.route_tables }}"
+
+- pause: seconds=30
+
+- name: "Purge routes"
+  ec2_vpc_route_table:
+    region: "{{ vpc_region }}"
+    vpc_id: "{{ vpc_info.vpcs[0].vpc_id }}"
+    route_table_id: "{{ item }}"
+    lookup: "id"
+    purge_routes: "yes"
+    purge_subnets: "yes"
+    state: "present"
+  loop: "{{ route_tables_to_delete }}"
+  when: route_tables_to_delete is defined
+
+- pause: seconds=30
+
+- name: "Delete route table"
+  ec2_vpc_route_table:
+    region: "{{ vpc_region }}"
+    vpc_id: "{{ vpc_info.vpcs[0].vpc_id }}"
+    route_table_id: "{{ item }}"
+    lookup: "id"
+    state: "absent"
+  loop: "{{ route_tables_to_delete }}"
+  when: route_tables_to_delete is defined
+
+- name: "Query for any existing subnet(s)"
+  ec2_vpc_subnet_info:
+    region: "{{ vpc_region }}"
+    filters:
+      vpc-id: "{{ vpc_info.vpcs[0].vpc_id }}"
+  register: subnet_info
+
+- name: "Delete subnets"
+  ec2_vpc_subnet:
+    region: "{{ vpc_region }}"
+    vpc_id: "{{ vpc_info.vpcs[0].vpc_id }}"
+    cidr: "{{ item.cidr_block }}"
+    state: "absent"
+  with_items: "{{ subnet_info.subnets }}"
+
+- name: "Delete vpc"
+  ec2_vpc_net:
+    region: "{{ vpc_region }}"
+    name: "{{ vpc_name }}"
+    cidr_block: "{{ vpc_info.vpcs[0].cidr_block }}"
+    state: "absent"

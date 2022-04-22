@@ -1,0 +1,18 @@
+# Use inside the tasks
+vpc_name: "{{ VPC_NAME }}"
+vpc_region: "{{ VPC_REGION }}"
+ec2_instance_type: "{{ EC2_INSTANCE_TYPE }}"
+ec2_key_name: "{{ EC2_KEY_NAME }}"
+ec2_security_group_name: "{{ EC2_SECURITY_GROUP_NAME }}"
+ec2_volume_size: "{{ EC2_VOLUME_SIZE }}"
+ec2_count: "{{ EC2_COUNT }}"
+ec2_subnet_id: "{{ EC2_SUBNET_ID }}"
+server_role: "{{SERVER_ROLE}}"
+key_name: "{{KEY_NAME}}"
+ebs_device_name: "{{EBS_DEVICE_NAME}}"
+ebs_device_vol_size: "{{EBS_DEVICE_VOL_SIZE}}"
+ebs_device_vol_name: "{{EBS_DEVICE_VOL_NAME}}"
+ebs_mountpoint: "{{EBS_MOUNTPOINT}}"
+
+ami_name: "{{ AMI_NAME }}"
+ami_owner: "{{ AMI_OWNER }}"
