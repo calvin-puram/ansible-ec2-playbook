@@ -62,8 +62,8 @@
     line: "{{ item.public_ip }}"
   with_items: "{{ ec2.instances }}"
 
-- name: actively mount and configure ebs volume in /etc/fstab
-  include_tasks: ebs_mount.yml
+# - name: actively mount and configure ebs volume in /etc/fstab
+#   include_tasks: ebs_mount.yml
 
 - name: WebServer | Wait for SSH to come up
   local_action:
