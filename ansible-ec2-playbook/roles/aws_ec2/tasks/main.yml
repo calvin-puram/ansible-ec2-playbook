@@ -24,7 +24,7 @@
     mode: "0700"
 
 - name: Save private key
-  copy: content="{{ ec2_key.key.private_key }}" dest="/keys{{ key_name }}.pem" mode=0600
+  copy: content="{{ ec2_key.key.private_key }}" dest="./keys{{ key_name }}.pem" mode=0600
   when: ec2_key.changed
 
 - name: Create EC2 Instance(s)
