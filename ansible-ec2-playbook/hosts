@@ -3,9 +3,9 @@ localhost
 
 
 [webserver]
-54.82.220.3
+54.82.220.3 
 
 [webserver:vars]
 ansible_user= ubuntu
 ansible_connection=ssh
-ansible_ssh_private_key_file="/keys/test-key.pem"
+ansible_ssh_private_key_file="./keys/test-key.pem"
