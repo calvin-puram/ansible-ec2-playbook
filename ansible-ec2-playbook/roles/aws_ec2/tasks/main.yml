@@ -21,7 +21,7 @@
   file:
     path: ~/keys
     state: directory
-    mode: "0755"
+    mode: "0700"
 
 - name: Save private key
   copy: content="{{ ec2_key.key.private_key }}" dest="~/keys/{{ key_name }}.pem" mode=0600
