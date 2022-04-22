@@ -1,6 +1,6 @@
 ---
 - name: Basic configuration for all servers
-  hosts: webserver
+  hosts: local
   gather_facts: no
   connection: local
   pre_tasks:
