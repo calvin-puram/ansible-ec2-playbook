@@ -12,3 +12,4 @@
   roles:
     - aws_vpc
     - aws_sg
+    - aws_ec2
